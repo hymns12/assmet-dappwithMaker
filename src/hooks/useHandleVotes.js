@@ -1,11 +1,15 @@
-import { isSupportedChain } from "../utils/index";
+import { useWeb3ModalAccount, useWeb3ModalProvider } from "@web3modal/ethers/react";
+import { isSupportedChain } from "../utils";
 import { getProvider } from "../constants/providers";
 import { getProposalsContract } from "../constants/contracts";
+import { toast } from "react-toastify";
 
+const useHandleVotes = () => {
+    const { chainId } = useWeb3ModalAccount();
+    const { walletProvider } = useWeb3ModalProvider();
 
-const heardleVoteFunctions = (id, chainId, walletProvider) => {
-    const handleVote = async () => {
-        if (!isSupportedChain(chainId)) return console.error("Wrong network");
+    return (async (id) => {
+        if (!isSupportedChain(chainId)) return toast.error("Wrong network");
         const readWriteProvider = getProvider(walletProvider);
         const signer = await readWriteProvider.getSigner();
 
@@ -19,27 +23,24 @@ const heardleVoteFunctions = (id, chainId, walletProvider) => {
             console.log("receipt: ", receipt);
 
             if (receipt.status) {
-                return console.log("vote successfull!");
+                return toast.success("vote successfull!");
             }
 
-            console.log("vote failed!");
-
+            toast.error("vote failed!");
         } catch (error) {
-            console.log(error);
+            // console.log(error);
             let errorText;
             if (error.reason === "Has no right to vote") {
-                errorText = "You have not right to vote";
+                errorText = "you have no right to vote!";
             } else if (error.reason === "Already voted.") {
-                errorText = "You have already voted";
+                errorText = "you have voted already!";
             } else {
-                errorText = "An unknown error occured";
+                errorText = "an unknown error occured!";
             }
 
-            console.error("error: ", errorText);
+            toast.error(`Error: ${errorText}`);
         }
-    };
-
-    return handleVote;
+    });
 }
 
-export default heardleVoteFunctions;
+export default useHandleVotes
